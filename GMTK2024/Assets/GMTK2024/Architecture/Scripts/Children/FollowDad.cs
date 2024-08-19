@@ -1,26 +1,33 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 public class FollowDad : MonoBehaviour
 {
     [SerializeField] private GameObject leader;
-    [SerializeField] private int steps;
+    [SerializeField] private GameObject followPoint;
+    [SerializeField] private float speed;
 
     private Rigidbody2D _rb;
-    public Queue<float> _record = new();
     private float _lastRecord;
 
     private void Start()
     {
         _rb = GetComponent<Rigidbody2D>();
     }
-    private void FixedUpdate() 
-    {
-        if (leader.transform.position.x != _lastRecord)
-            _record.Enqueue(leader.transform.position.x);
 
-        if (_record.Count <= steps) return;
-        _lastRecord = _record.Dequeue();
-        _rb.position += new Vector2(_lastRecord, transform.position.y);
+    private void FixedUpdate()
+    {
+        if (!leader) return;
+        _lastRecord = leader.transform.position.x;
+        _rb.position = Vector2.MoveTowards(_rb.position, new Vector2(_lastRecord, _rb.position.y),
+            speed * Time.fixedDeltaTime);
+    }
+
+    public void FollowTarget(bool isFacingRight)
+    {
+        leader = isFacingRight switch
+        {
+            true => followPoint,
+            false => null
+        };
     }
 }

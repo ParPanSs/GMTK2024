@@ -65,6 +65,8 @@ public class DuckAbility : MonoBehaviour
 
     private IEnumerator SetAbility(Vector2 targetScale, float scaleDuration)
     {
+        if (transform.localScale.x < 0)
+            targetScale.x *= -1;
         _isScaling = true;
         Vector2 currentScale = transform.localScale;
      
