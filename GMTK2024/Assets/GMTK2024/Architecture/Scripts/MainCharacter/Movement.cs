@@ -11,6 +11,7 @@ public class Movement : MonoBehaviour
     private float _horizontal;
     private float _startSpeed;
     private bool _canJump;
+    private bool _isFacingRight = true;
     
     private void Awake()
     {
@@ -21,9 +22,8 @@ public class Movement : MonoBehaviour
     private void Update()
     {
         _horizontal = Input.GetAxis("Horizontal");
-        RaycastHit2D ray = Physics2D.Raycast(legs.transform.position, Vector2.down, .1f, 
-            whatIsGround);
-        if (ray.collider != null)
+        Collider2D ray = Physics2D.OverlapCircle(legs.transform.position, .2f, whatIsGround);
+        if (ray != null)
         {
             _canJump = true;
             speed = _startSpeed;
@@ -31,17 +31,31 @@ public class Movement : MonoBehaviour
         else
         {
             _canJump = false;
-            speed = 5f;
+            speed = 7f;
         }
         if (_canJump && Input.GetKeyDown(KeyCode.Space))
         {
             _rb.AddForce(new Vector2(_rb.velocity.x, jumpForce), ForceMode2D.Impulse);
             StartCoroutine(childrenMovement.Jump());
         }
+        
+        Flip(); 
     }
     
     private void FixedUpdate()
     {
         _rb.velocity = new Vector2(_horizontal * speed, _rb.velocity.y);
+    }
+    
+    private void Flip()
+    {
+        if (_isFacingRight && _horizontal < 0 || !_isFacingRight && _horizontal > 0)
+        {
+            childrenMovement.Flip(_isFacingRight, _horizontal);
+            Vector3 localScale = transform.localScale;
+            _isFacingRight = !_isFacingRight;
+            localScale.x *= -1f;
+            transform.localScale = localScale;
+        }
     }
 }
