@@ -10,9 +10,10 @@ public class CharacterMovement : MonoBehaviour
     [SerializeField] private GameObject legs;
     [SerializeField] private List<Rigidbody2D> _rbs;
     [SerializeField] private List<Animator> duckAnimators;
+    [SerializeField] private DuckAbility garryAbility;
     private float _horizontal;
     private float _startSpeed;
-    private bool _canJump;
+    private bool _canJump = true;
     private bool _isFacingRight = true;
     
     private void Awake()
@@ -23,10 +24,9 @@ public class CharacterMovement : MonoBehaviour
     private void Update()
     {
         _horizontal = Input.GetAxis("Horizontal");
-        Collider2D ray = Physics2D.OverlapCircle(legs.transform.position, .2f, whatIsGround);
+        Collider2D ray = Physics2D.OverlapCircle(legs.transform.position, .05f, whatIsGround);
         if (ray != null)
         {
-            _canJump = true;
             speed = _startSpeed;
         }
         else
@@ -35,8 +35,8 @@ public class CharacterMovement : MonoBehaviour
         }
         if (_canJump && Input.GetKeyDown(KeyCode.Space))
         {
-            StartCoroutine(Jump());
             _canJump = false;
+            StartCoroutine(Jump());
         }
         
         Flip();
@@ -73,13 +73,24 @@ public class CharacterMovement : MonoBehaviour
         {
             foreach (var rigidbody in _rbs)
             {
-                Vector3 localScale = rigidbody.transform.localScale;
-                localScale.x *= -1f;
-                rigidbody.transform.localScale = localScale;
+                // Vector3 localScale = rigidbody.transform.localScale;
+                // localScale.x *= -1f;
+                // rigidbody.transform.localScale = localScale;
+                rigidbody.transform.rotation = Quaternion.Euler(0f, rigidbody.transform.rotation.y + 180 * _isFacingRight.GetHashCode(), 0f);
             }
             _isFacingRight = !_isFacingRight;
-            _rbs.Reverse();
+            StartCoroutine(ReverseArray());
         }
+    }
+
+    private IEnumerator ReverseArray()
+    {
+        if (!_canJump)
+        {
+            yield return new WaitUntil(() => _canJump);
+        }
+        _rbs.Reverse();
+        duckAnimators.Reverse();
     }
 
     private IEnumerator Jump()
@@ -87,13 +98,15 @@ public class CharacterMovement : MonoBehaviour
         var normalJump = jumpForce;
         for (int i = 0; i < _rbs.Count; i++)
         {
-            if (_rbs[i].name == "Duck")
-                jumpForce += 3f;
+            if (_rbs[i].name == "Duck" || garryAbility.gameObject == _rbs[i].gameObject)
+                jumpForce += 2f;
             else
                 jumpForce = normalJump;
             duckAnimators[i].SetBool("isJump", true);
             _rbs[i].AddForce(new Vector2(_rbs[i].velocity.x, jumpForce), ForceMode2D.Impulse);
             yield return new WaitForSeconds(.2f);
         }
+        jumpForce = normalJump;
+        _canJump = true;
     }
 }

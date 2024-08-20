@@ -41,3 +41,6 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: ducks
+    uniqueID: 2142546387
+    locked: 0
